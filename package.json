@@ -1,0 +1,21 @@
+{
+  "name": "routed",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "test": "node ./test.js",
+    "start": "node server.js"
+  },
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "ejs": "^2.5.1",
+    "express": "^4.14.0",
+    "query-string": "^4.2.2",
+    "url-pattern": "^1.0.1"
+  },
+  "devDependencies": {
+    "browserify": "^13.1.0"
+  }
+}
