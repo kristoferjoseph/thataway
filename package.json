@@ -1,11 +1,14 @@
 {
-  "name": "routed",
+  "name": "thataway",
   "version": "1.0.0",
   "description": "",
   "main": "index.js",
   "scripts": {
     "test": "node ./test.js",
-    "start": "node server.js"
+    "test-build": "browserify ./test.js -o ./public/test.bundle.js",
+    "watch-test": "watchify ./test.js -o ./public/test.bundle.js",
+    "start": "node server.js",
+    "umd": "browserify ./index.js --standalone thataway | uglifyjs --compress --mangle --screw-ie8 > thataway.umd.js"
   },
   "author": "",
   "license": "ISC",
@@ -13,9 +16,12 @@
     "ejs": "^2.5.1",
     "express": "^4.14.0",
     "query-string": "^4.2.2",
+    "tape": "^4.6.0",
     "url-pattern": "^1.0.1"
   },
   "devDependencies": {
-    "browserify": "^13.1.0"
+    "browserify": "^13.1.0",
+    "uglify-js": "^2.7.0",
+    "watchify": "^3.7.0"
   }
 }

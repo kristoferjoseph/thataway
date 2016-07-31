@@ -3,13 +3,30 @@
 <head>
   <meta charset="UTF-8">
   <title><%- title %></title>
+  <style>
+    body {
+      font-family: sans-serif;
+      padding: 3rem;
+    }
+    .test-pass {
+      margin-left: 2rem;
+      color: #2ECC40;
+    }
+    .test-fail {
+      margin-left: 2rem;
+      color: #FF4136;
+    }
+  </style>
 </head>
 <body>
-  <%- path %>
+  <h1>Open the console to see test output</h1>
+  last server request <%- path %>
   <a href=<%- next %>>next</a>
+  <div id="output"></div>
   <script>
     window.__INITIAL_STATE__ = <%- initialState %>
     console.log(__INITIAL_STATE__)
   </script>
+  <script src="test.bundle.js"></script>
 </body>
 </html>
