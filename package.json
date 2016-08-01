@@ -11,8 +11,18 @@
     "start": "node server.js",
     "umd": "browserify ./index.js --standalone thataway | uglifyjs --compress --mangle --screw-ie8 > thataway.umd.js"
   },
-  "author": "",
+  "keywords": [
+    "router",
+    "browser",
+    "universal",
+    "minimal"
+  ],
+  "author": "@dam",
   "license": "Apache-2.0",
+  "bugs": {
+    "url": "https://github.com/kristoferjoseph/thataway/issues"
+  },
+  "homepage": "https://github.com/kristoferjoseph/thataway#readme",
   "dependencies": {
     "ejs": "^2.5.1",
     "express": "^4.14.0",
