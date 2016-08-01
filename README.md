@@ -1,4 +1,4 @@
-# ⚡️Thataway⚡️
+# 👉Thataway👈
 Minimal url routing library.
 
 - Written in plain ol JavaScript so **no transpile needed**🔥
@@ -39,4 +39,7 @@ router.navigate('/things/123/456')
 
 Use the router to associate a data object with a url. When the url is navigated to either by using the `navigate` method or from using the browser's back button all registered listeners will be called with the stored data object with the url properties of `params` and `query` added in.
 
+## Test
+`npm run browser-tests`
+Thataway adds event listeners to the browser's window object so the tests need to run in the browser. Furthermore, we want to test that it works in a server render environment, hence the tiny express app. 👍 
 

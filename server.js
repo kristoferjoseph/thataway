@@ -31,6 +31,6 @@ app.get('/c', function(req, res) {
   res.blap({title:'NOPE', next:'/'})
 })
 
-app.listen(3000, function() {
-  console.log('listening on port 3000')
+app.listen(6661, function() {
+  console.log('Open http://localhost:6661 in your browser.')
 })

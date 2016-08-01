@@ -6,6 +6,7 @@
   "scripts": {
     "test": "node ./test.js",
     "test-build": "browserify ./test.js -o ./public/test.bundle.js",
+    "browser-tests": "npm run test-build && npm run start",
     "watch-test": "watchify ./test.js -o ./public/test.bundle.js",
     "start": "node server.js",
     "umd": "browserify ./index.js --standalone thataway | uglifyjs --compress --mangle --screw-ie8 > thataway.umd.js"
