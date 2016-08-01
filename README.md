@@ -2,7 +2,7 @@
 Minimal url routing library.
 
 - Written in plain ol JavaScript so **no transpile needed**🔥
-- Under 2k minified💥
+- 10k packaged for the browser and minified with dependencies included💥
 - Simple api of three methods:
     - addRoute
     - addListener
@@ -41,5 +41,5 @@ Use the router to associate a data object with a url. When the url is navigated 
 
 ## Test
 `npm run browser-tests`
-Thataway adds event listeners to the browser's window object so the tests need to run in the browser. Furthermore, we want to test that it works in a server render environment, hence the tiny express app. 👍 
+Thataway adds event listeners to the browser's window object so the tests need to run in the browser. Furthermore, we want to test that it works in a server render environment, hence the tiny express app. 👍
 

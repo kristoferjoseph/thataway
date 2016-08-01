@@ -8,7 +8,6 @@ app.use(function(req, res, next) {
   res.blap = function(state) {
     state = state || {}
     state.path = req.path
-    thataway(state)
     state.initialState = JSON.stringify(state)
     res.render('wrapper', state)
   }
