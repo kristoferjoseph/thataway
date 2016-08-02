@@ -33,7 +33,7 @@ module.exports = function() {
 
   test('should call listener on url change', function(t) {
     var  tw = thataway()
-    tw.addRoute('/a')
+    tw.addRoute('/a', {} )
     tw.addListener(
       function(e) {
         t.ok(true, 'called listener')
@@ -45,7 +45,7 @@ module.exports = function() {
 
   test('should pass path to update method', function(t) {
     var  tw = thataway()
-    tw.addRoute('/b')
+    tw.addRoute('/b', {})
     tw.addListener(
       function(data) {
         t.equal(data.path, '/b', 'passed path to update')
@@ -62,7 +62,7 @@ module.exports = function() {
 
   test('should navigate to a path', function(t) {
     var tw = thataway()
-    tw.addRoute('/c')
+    tw.addRoute('/c', {})
     tw.navigate('/c')
     t.equal(location.pathname, '/c')
     t.end()
@@ -94,6 +94,7 @@ module.exports = function() {
         stuff: 'YOLO',
         path: '/thing/123/456',
         params: {
+          path: '/thing/123/456',
           comment: '123',
           id: '456'
         },

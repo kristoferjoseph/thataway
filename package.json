@@ -28,7 +28,7 @@
     "ejs": "^2.5.1",
     "express": "^4.14.0",
     "query-string": "^4.2.2",
-    "router-params": "^1.0.0",
+    "router-params": "^2.0.1",
     "tape": "^4.6.0"
   },
   "devDependencies": {

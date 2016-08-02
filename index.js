@@ -14,20 +14,23 @@ module.exports = function thataway() {
   }
 
   function addRoute(route, data) {
-    data = data || {}
-    var pattern
-    if (typeof route !== 'string') {
-      throw Error('addRoute requires a route of type string and data to store')
-    }
+    var matcher
+    if (route && typeof route === 'string' &&
+        data && data === Object(data)) {
 
-    if (/:/.test(route)) {
-      patterns.push({
-        matcher: routerParams(route),
-        data: data
-      })
-    }
+      matcher = routerParams(route)
+      if (matcher) {
+        patterns.push({
+          matcher: matcher,
+          data: data
+        })
+      }
 
-    routes[route] = data
+      routes[route] = data
+    }
+    else {
+      throw Error('addRoute requires a route of type string and data of type object to store')
+    }
   }
 
   function addListener(listener) {
@@ -63,11 +66,9 @@ module.exports = function thataway() {
       throw Error('navigate requires a path of type string and can optionally be passed data and a title')
     }
     path = removeTrailingSlash(path)
-    if (shouldUpdate(path)) {
-      if (browser) {
-        history.pushState(data, title, path)
-        update()
-      }
+    if (browser && shouldUpdate(path)) {
+      history.pushState(data, title, path)
+      update()
     }
   }
 
