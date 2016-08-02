@@ -86,14 +86,12 @@ module.exports = function thataway() {
     var data  = routes[path]
     var params
 
-    if (!data) {
-      patterns.forEach(function(pattern) {
-        params = pattern.matcher(path)
-        if (params) {
-          data = pattern.data
-        }
-      })
-    }
+    patterns.forEach(function(pattern) {
+      params = pattern.matcher(path)
+      if (params) {
+        data = pattern.data
+      }
+    })
 
     if (data) {
       data.path   = path
