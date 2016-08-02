@@ -33,6 +33,7 @@ module.exports = function() {
 
   test('should call listener on url change', function(t) {
     var  tw = thataway()
+    tw.addRoute('/a')
     tw.addListener(
       function(e) {
         t.ok(true, 'called listener')
@@ -44,6 +45,7 @@ module.exports = function() {
 
   test('should pass path to update method', function(t) {
     var  tw = thataway()
+    tw.addRoute('/b')
     tw.addListener(
       function(data) {
         t.equal(data.path, '/b', 'passed path to update')
@@ -60,6 +62,7 @@ module.exports = function() {
 
   test('should navigate to a path', function(t) {
     var tw = thataway()
+    tw.addRoute('/c')
     tw.navigate('/c')
     t.equal(location.pathname, '/c')
     t.end()
@@ -82,51 +85,6 @@ module.exports = function() {
   })
 
   /*
-  * If you want to test this method add it back to module exports
-  test('should add route', function(t) {
-    var tw = thataway()
-    tw.addRoute('/b', {title: 'BOOYA'})
-    t.equal(tw.getRoutes()['/b'].title, 'BOOYA', 'route added')
-    t.end()
-  })
-  */
-
-  /*
-  * If you want to test this method add it back to module exports
-  test('should have getPatterns method', function(t) {
-    t.ok(thataway().getPatterns, 'has getPatterns method')
-    t.end()
-  })
-  */
-
-  /*
-  * If you want to test this method add it back to module exports
-  test('should add pattern from parameterized route', function(t) {
-    t.plan(2)
-    var tw = thataway()
-    tw.addRoute('/thing/:comment/:id', {stuff:'YOLO'})
-    t.equal(tw.getPatterns().length, 1, 'added a pattern')
-    t.deepEqual(
-      tw.getPatterns()[0].pattern.match('/thing/123/456'),
-      {
-        comment:'123',
-        id:'456'
-      }
-    )
-    t.end()
-  })
-  */
-
-  /*
-  * If you want to test this method add it back to module exports
-  test('should have getRouteData method', function(t) {
-    t.ok(thataway().getRouteData, 'has getRouteData method')
-    t.end()
-  })
-  */
-
-  /*
-  * If you want to test this method add it back to module exports
   test('should get route data', function(t) {
     var tw = thataway()
     tw.addRoute('/thing/:comment/:id', {stuff:'YOLO'})

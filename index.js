@@ -1,5 +1,5 @@
 var queryString = require('query-string')
-var Pattern = require('url-pattern')
+var routerParams = require('router-params')
 
 module.exports = function thataway() {
   var listeners   = []
@@ -14,15 +14,15 @@ module.exports = function thataway() {
   }
 
   function addRoute(route, data) {
+    data = data || {}
     var pattern
     if (typeof route !== 'string') {
       throw Error('addRoute requires a route of type string and data to store')
     }
 
     if (/:/.test(route)) {
-      pattern = new Pattern(route)
       patterns.push({
-        pattern: pattern,
+        matcher: routerParams(route),
         data: data
       })
     }
@@ -82,19 +82,26 @@ module.exports = function thataway() {
 
   function getRouteData(path) {
     var query = queryString.parse(location.search)
-    var data  = routes[path] || {}
+    var data  = routes[path]
     var params
 
-    patterns.forEach(function(matcher) {
-      params = matcher.pattern.match(path)
-      if (matcher.data) {
-        data = matcher.data
-      }
-    })
+    if (!data) {
+      patterns.forEach(function(pattern) {
+        params = pattern.matcher(path)
+        if (params) {
+          data = pattern.data
+        }
+      })
+    }
 
-    data.path   = path
-    data.params = params
-    data.query  = query
+    if (data) {
+      data.path   = path
+      data.params = params
+      data.query  = query
+    }
+    else {
+      throw Error('Route not found.')
+    }
 
     return data
   }

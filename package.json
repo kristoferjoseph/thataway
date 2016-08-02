@@ -9,6 +9,7 @@
     "browser-tests": "npm run test-build && npm run start",
     "watch-test": "watchify ./test.js -o ./public/test.bundle.js",
     "start": "node server.js",
+    "min": "browserify ./index.js | uglifyjs --compress --mangle --screw-ie8 > thataway.min.js",
     "umd": "browserify ./index.js --standalone thataway | uglifyjs --compress --mangle --screw-ie8 > thataway.umd.js"
   },
   "keywords": [
@@ -27,8 +28,8 @@
     "ejs": "^2.5.1",
     "express": "^4.14.0",
     "query-string": "^4.2.2",
-    "tape": "^4.6.0",
-    "url-pattern": "^1.0.1"
+    "router-params": "^1.0.0",
+    "tape": "^4.6.0"
   },
   "devDependencies": {
     "browserify": "^13.1.0",

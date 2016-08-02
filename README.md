@@ -2,7 +2,7 @@
 Minimal url routing library.
 
 - Written in plain ol JavaScript so **no transpile needed**🔥
-- 10k packaged for the browser and minified with dependencies included💥
+- 7k packaged for the browser and minified with dependencies included💥
 - Simple api of three methods:
     - addRoute
     - addListener
