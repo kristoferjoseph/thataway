@@ -25,15 +25,15 @@
   },
   "homepage": "https://github.com/kristoferjoseph/thataway#readme",
   "dependencies": {
-    "ejs": "^2.5.1",
-    "express": "^4.14.0",
     "query-string": "^4.2.2",
-    "router-params": "^2.0.1",
-    "tape": "^4.6.0"
+    "router-params": "^2.0.1"
   },
   "devDependencies": {
+    "ejs": "^2.5.1",
+    "express": "^4.14.0",
     "browserify": "^13.1.0",
     "uglify-js": "^2.7.0",
+    "tape": "^4.6.0",
     "watchify": "^3.7.0"
   }
 }
