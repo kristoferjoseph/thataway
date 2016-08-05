@@ -3,14 +3,10 @@ var queryString = require('query-string')
 var routerParams = require('router-params')
 
 module.exports = function thataway() {
-  var listeners   = []
-  var patterns    = []
-  var routes      = {}
-  var currentPath = ''
-  var browser     = false
+  var listeners = []
+  var patterns  = []
+  var routes    = {}
   if (typeof window !== 'undefined') {
-    browser = true
-    currentPath = removeTrailingSlash(location.pathname)
     window.onpopstate = update
   }
 
@@ -42,18 +38,11 @@ module.exports = function thataway() {
   }
 
   function shouldUpdate(path) {
-    var should = false
-    if (currentPath !== path) {
-      should = true
-      currentPath = path
-    }
-    return should
+    return path !== removeTrailingSlash(location.pathname)
   }
 
-  function update() {
-    //NOTE: This needs to be read from the location.pathname
-    //  for when it is triggered by the onpopstate event
-    var path = removeTrailingSlash(location.pathname)
+  function update(path) {
+    path = path || removeTrailingSlash(location.pathname)
     var data = getRouteData(path)
     listeners.forEach(
       function(l) {
@@ -67,9 +56,10 @@ module.exports = function thataway() {
       throw Error('navigate requires a path of type string and can optionally be passed data and a title')
     }
     path = removeTrailingSlash(path)
-    if (browser && shouldUpdate(path)) {
+    if (typeof window !== 'undefined' &&
+        shouldUpdate(path)) {
       history.pushState(data, title, path)
-      update()
+      update(path)
     }
   }
 
@@ -109,6 +99,7 @@ module.exports = function thataway() {
   return {
     addRoute:addRoute,
     addListener:addListener,
+    getRouteData:getRouteData,
     navigate:navigate
   }
 
@@ -7781,13 +7772,6 @@ module.exports = function() {
     t.end()
   })
 
-  /*
-  test('should have update method', function(t) {
-    t.ok(thataway().update, 'update method exists')
-    t.end()
-  })
-  */
-
   test('should call listener on url change', function(t) {
     var  tw = thataway()
     tw.addRoute('/a', {} )
@@ -7841,7 +7825,6 @@ module.exports = function() {
     t.end()
   })
 
-  /*
   test('should get route data', function(t) {
     var tw = thataway()
     tw.addRoute('/thing/:comment/:id', {stuff:'YOLO'})
@@ -7861,7 +7844,6 @@ module.exports = function() {
     )
     t.end()
   })
-  */
 
 }()
 

@@ -24,13 +24,6 @@ module.exports = function() {
     t.end()
   })
 
-  /*
-  test('should have update method', function(t) {
-    t.ok(thataway().update, 'update method exists')
-    t.end()
-  })
-  */
-
   test('should call listener on url change', function(t) {
     var  tw = thataway()
     tw.addRoute('/a', {} )
@@ -84,7 +77,6 @@ module.exports = function() {
     t.end()
   })
 
-  /*
   test('should get route data', function(t) {
     var tw = thataway()
     tw.addRoute('/thing/:comment/:id', {stuff:'YOLO'})
@@ -104,6 +96,5 @@ module.exports = function() {
     )
     t.end()
   })
-  */
 
 }()

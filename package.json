@@ -4,7 +4,7 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "test": "node ./test.js",
+    "test": "npm run test-build && npm start",
     "test-build": "browserify ./test.js -o ./public/test.bundle.js",
     "browser-tests": "npm run test-build && npm run start",
     "watch-test": "watchify ./test.js -o ./public/test.bundle.js",
