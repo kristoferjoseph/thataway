@@ -40,8 +40,8 @@ module.exports = function thataway() {
     return path !== removeTrailingSlash(location.pathname)
   }
 
-  function update(path) {
-    path = path || removeTrailingSlash(location.pathname)
+  function update() {
+    var path = removeTrailingSlash(location.pathname)
     var data = getRouteData(path)
     listeners.forEach(
       function(l) {
@@ -58,7 +58,7 @@ module.exports = function thataway() {
     if (typeof window !== 'undefined' &&
         shouldUpdate(path)) {
       history.pushState(data, title, path)
-      update(path)
+      update()
     }
   }
 
@@ -72,25 +72,18 @@ module.exports = function thataway() {
   }
 
   function getRouteData(path) {
-    var query = queryString.parse(location.search)
-    var data  = routes[path]
     var params
+    var data   = routes[path] || {}
+    data.path  = path
+    data.query = queryString.parse(location.search)
 
     patterns.forEach(function(pattern) {
       params = pattern.matcher(path)
       if (params) {
-        data = pattern.data
+        data = Object.assign(data, pattern.data)
+        data.params = params
       }
     })
-
-    if (data) {
-      data.path   = path
-      data.params = params
-      data.query  = query
-    }
-    else {
-      throw Error('Route not found.')
-    }
 
     return data
   }
