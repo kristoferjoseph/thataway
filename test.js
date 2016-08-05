@@ -25,7 +25,7 @@ module.exports = function() {
   })
 
   test('should call listener on url change', function(t) {
-    var  tw = thataway()
+    var tw = thataway()
     tw.addRoute('/a', {} )
     tw.addListener(
       function(e) {
@@ -37,7 +37,7 @@ module.exports = function() {
   })
 
   test('should pass path to update method', function(t) {
-    var  tw = thataway()
+    var tw = thataway()
     tw.addRoute('/b', {})
     tw.addListener(
       function(data) {
@@ -95,6 +95,25 @@ module.exports = function() {
       'got correct route data'
     )
     t.end()
+  })
+
+  test('should work with history.back', function(t){
+    t.plan(4)
+    var results = ['HOME', 'A', 'B', 'A']
+    var counter = 0
+    var tw = thataway()
+    tw.addRoute('/', {title:'HOME'})
+    tw.addRoute('/a', {title:'A'})
+    tw.addRoute('/b', {title:'B'})
+    tw.addListener(function(data) {
+      var expected = results[counter]
+      t.equal(data.title, expected)
+      counter++
+    })
+    tw.navigate('/')
+    tw.navigate('/a')
+    tw.navigate('/b')
+    history.back()
   })
 
 }()

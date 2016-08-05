@@ -14,7 +14,6 @@ module.exports = function thataway() {
     var matcher
     if (route && typeof route === 'string' &&
         data && data === Object(data)) {
-
       matcher = routerParams(route)
       if (matcher) {
         patterns.push({
@@ -22,7 +21,6 @@ module.exports = function thataway() {
           data: data
         })
       }
-
       routes[route] = data
     }
     else {
@@ -32,7 +30,7 @@ module.exports = function thataway() {
 
   function addListener(listener) {
     if (typeof listener !== 'function') {
-      throw Error('addListener requires a function to be passed')
+      throw Error('addListener requires a function argument')
     }
     return listeners.push(listener)
   }
@@ -74,18 +72,23 @@ module.exports = function thataway() {
 
   function getRouteData(path) {
     var params
-    var data   = routes[path] || {}
-    data.path  = path
-    data.query = queryString.parse(location.search)
-
+    var data = routes[path]
     patterns.forEach(function(pattern) {
       params = pattern.matcher(path)
       if (params) {
-        data = Object.assign(data, pattern.data)
+        data?
+          Object.assign(data, pattern.data):
+          data = pattern.data
         data.params = params
       }
     })
-
+    if (data) {
+      data.path  = path
+      data.query = queryString.parse(location.search)
+    }
+    else {
+      throw Error('Route not found')
+    }
     return data
   }
 
@@ -7767,7 +7770,7 @@ module.exports = function() {
   })
 
   test('should call listener on url change', function(t) {
-    var  tw = thataway()
+    var tw = thataway()
     tw.addRoute('/a', {} )
     tw.addListener(
       function(e) {
@@ -7779,7 +7782,7 @@ module.exports = function() {
   })
 
   test('should pass path to update method', function(t) {
-    var  tw = thataway()
+    var tw = thataway()
     tw.addRoute('/b', {})
     tw.addListener(
       function(data) {
@@ -7837,6 +7840,25 @@ module.exports = function() {
       'got correct route data'
     )
     t.end()
+  })
+
+  test('should work with history.back', function(t){
+    t.plan(4)
+    var results = ['HOME', 'A', 'B', 'A']
+    var counter = 0
+    var tw = thataway()
+    tw.addRoute('/', {title:'HOME'})
+    tw.addRoute('/a', {title:'A'})
+    tw.addRoute('/b', {title:'B'})
+    tw.addListener(function(data) {
+      var expected = results[counter]
+      t.equal(data.title, expected)
+      counter++
+    })
+    tw.navigate('/')
+    tw.navigate('/a')
+    tw.navigate('/b')
+    history.back()
   })
 
 }()
