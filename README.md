@@ -16,24 +16,30 @@ Simplest working example
 
 ```
 var createRouter = require('thataway')
-var router = createRouter()
+var router       = createRouter()
+
 router.addRoute('/things', {animal:'raccoon'})
 router.addListener(update)
+
 function update(data) {
   console.log(data)// Outputs {animal:'racoon',path:'/things',params:{},query:{}}
 }
+
 router.navigate('/things')
 ```
 
 Complex urls
 ```
 var createRouter = require('thataway')
-var router = createRouter()
+var router       = createRouter()
+
 router.addRoute('/things/:comment/:id', {animal:'raccoon'})
 router.addListener(update)
+
 function update(data) {
   console.log(data)// Outputs {animal:'racoon',path:'/things', params: {comment:'123',id:'456'}, query:{}}
 }
+
 router.navigate('/things/123/456')
 ```
 
