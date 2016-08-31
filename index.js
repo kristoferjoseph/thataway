@@ -1,5 +1,15 @@
-var queryString = require('query-string')
+var queryString  = require('query-string')
 var routerParams = require('router-params')
+var location
+if (typeof window === 'undefined') {
+  location = {
+    pathname: '/',
+    search: ''
+  }
+}
+else {
+  location = window.location
+}
 
 module.exports = function thataway() {
   var listeners = []
