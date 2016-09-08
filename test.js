@@ -77,7 +77,7 @@ module.exports = function() {
     t.end()
   })
 
-  test('should get route data', function(t) {
+  test('should get paramaterized route data', function(t) {
     var tw = thataway()
     tw.addRoute('/thing/:comment/:id', {stuff:'YOLO'})
     t.deepEqual(
@@ -90,6 +90,22 @@ module.exports = function() {
           comment: '123',
           id: '456'
         },
+        query: {}
+      },
+      'got correct route data'
+    )
+    t.end()
+  })
+
+  test('should return first route match, then check for pattern match', function(t) {
+    var tw = thataway()
+    tw.addRoute('/thing/:id', {stuff:'NOLO'})
+    tw.addRoute('/thing/', {stuff:'YOLO'})
+    t.deepEqual(
+      tw.getRouteData('/thing/'),
+      {
+        stuff: 'YOLO',
+        path: '/thing',
         query: {}
       },
       'got correct route data'

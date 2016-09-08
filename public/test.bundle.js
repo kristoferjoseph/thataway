@@ -21,6 +21,7 @@ module.exports = function thataway() {
   }
 
   function addRoute(route, data) {
+    route = removeTrailingSlash(route)
     var matcher
     if (route && typeof route === 'string' &&
         data && data === Object(data)) {
@@ -50,8 +51,7 @@ module.exports = function thataway() {
   }
 
   function update() {
-    var path = removeTrailingSlash(location.pathname)
-    var data = getRouteData(path)
+    var data = getRouteData(location.pathname)
     listeners.forEach(
       function(l) {
         l(data)
@@ -81,17 +81,18 @@ module.exports = function thataway() {
   }
 
   function getRouteData(path) {
+    path = removeTrailingSlash(path)
     var params
     var data = routes[path]
-    patterns.forEach(function(pattern) {
-      params = pattern.matcher(path)
-      if (params) {
-        data?
-          Object.assign(data, pattern.data):
+    if (!data) {
+      patterns.forEach(function(pattern) {
+        params = pattern.matcher(path)
+        if (params) {
           data = pattern.data
-        data.params = params
-      }
-    })
+          data.params = params
+        }
+      })
+    }
     if (data) {
       data.path  = path
       data.query = queryString.parse(location.search)
@@ -7832,7 +7833,7 @@ module.exports = function() {
     t.end()
   })
 
-  test('should get route data', function(t) {
+  test('should get paramaterized route data', function(t) {
     var tw = thataway()
     tw.addRoute('/thing/:comment/:id', {stuff:'YOLO'})
     t.deepEqual(
@@ -7845,6 +7846,22 @@ module.exports = function() {
           comment: '123',
           id: '456'
         },
+        query: {}
+      },
+      'got correct route data'
+    )
+    t.end()
+  })
+
+  test('should return first route match, then check for pattern match', function(t) {
+    var tw = thataway()
+    tw.addRoute('/thing/:id', {stuff:'NOLO'})
+    tw.addRoute('/thing/', {stuff:'YOLO'})
+    t.deepEqual(
+      tw.getRouteData('/thing/'),
+      {
+        stuff: 'YOLO',
+        path: '/thing',
         query: {}
       },
       'got correct route data'

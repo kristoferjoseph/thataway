@@ -20,6 +20,7 @@ module.exports = function thataway() {
   }
 
   function addRoute(route, data) {
+    route = removeTrailingSlash(route)
     var matcher
     if (route && typeof route === 'string' &&
         data && data === Object(data)) {
@@ -49,8 +50,7 @@ module.exports = function thataway() {
   }
 
   function update() {
-    var path = removeTrailingSlash(location.pathname)
-    var data = getRouteData(path)
+    var data = getRouteData(location.pathname)
     listeners.forEach(
       function(l) {
         l(data)
@@ -80,17 +80,18 @@ module.exports = function thataway() {
   }
 
   function getRouteData(path) {
+    path = removeTrailingSlash(path)
     var params
     var data = routes[path]
-    patterns.forEach(function(pattern) {
-      params = pattern.matcher(path)
-      if (params) {
-        data?
-          Object.assign(data, pattern.data):
+    if (!data) {
+      patterns.forEach(function(pattern) {
+        params = pattern.matcher(path)
+        if (params) {
           data = pattern.data
-        data.params = params
-      }
-    })
+          data.params = params
+        }
+      })
+    }
     if (data) {
       data.path  = path
       data.query = queryString.parse(location.search)
