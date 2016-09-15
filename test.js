@@ -113,6 +113,14 @@ module.exports = function() {
     t.end()
   })
 
+  test.only('should match on root path "/"', function(t) {
+    t.plan(1)
+    var tw = thataway()
+    tw.addRoute('/', {stuff:'ROOT DOWN'})
+    t.deepEqual(tw.getRouteData('/'), { path: '/', query: {} ,stuff:'ROOT DOWN'})
+
+  })
+
   test('should work with history.back', function(t){
     t.plan(4)
     var results = ['HOME', 'A', 'B', 'A']
