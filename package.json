@@ -25,6 +25,7 @@
   },
   "homepage": "https://github.com/kristoferjoseph/thataway#readme",
   "dependencies": {
+    "in-window": "^2.0.0",
     "query-string": "^4.2.2",
     "router-params": "^2.0.2"
   },

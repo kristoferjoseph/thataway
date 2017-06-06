@@ -113,7 +113,7 @@ module.exports = function() {
     t.end()
   })
 
-  test.only('should match on root path "/"', function(t) {
+  test('should match on root path "/"', function(t) {
     t.plan(1)
     var tw = thataway()
     tw.addRoute('/', {stuff:'ROOT DOWN'})
