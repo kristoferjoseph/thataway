@@ -76,7 +76,7 @@ module.exports = function thataway (paths) {
       if (params) {
         data = pattern.data
         data.params = params
-        break;
+        break
       }
     }
     return data
