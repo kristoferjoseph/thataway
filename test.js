@@ -2,14 +2,11 @@ var test   = require('tape')
 var thataway = require('./')
 var display
 
-if (typeof window !== 'undefined') {
-  display = document.getElementById('output')
-}
+'undefined' !== typeof window &&
+(display = document.getElementById('output'))
 
 function print(out) {
-  if (display) {
-    display.innerHTML += out
-  }
+  display && (display.innerHTML += out)
 }
 
 module.exports = function() {
@@ -19,33 +16,33 @@ module.exports = function() {
     t.end()
   })
 
-  test('should add listener', function(t) {
-    t.ok(thataway().addListener(function() {}), 'thataway did add listener')
+  test('should subscribe', function(t) {
+    t.ok(thataway().subscribe(function() {}), 'thataway did add listener')
     t.end()
   })
 
   test('should call listener on url change', function(t) {
-    var tw = thataway()
-    tw.addRoute('/a', {} )
-    tw.addListener(
+    var router = thataway()
+    router.register('/a', {})
+    router.subscribe(
       function(e) {
         t.ok(true, 'called listener')
         t.end()
       }
     )
-    tw.navigate('/a')
+    router.navigate('/a')
   })
 
   test('should pass path to update method', function(t) {
-    var tw = thataway()
-    tw.addRoute('/b', {})
-    tw.addListener(
+    var router = thataway()
+    router.register('/b', {})
+    router.subscribe(
       function(data) {
         t.equal(data.path, '/b', 'passed path to update')
         t.end()
       }
     )
-    tw.navigate('/b')
+    router.navigate('/b')
   })
 
   test('should have navigate method', function(t) {
@@ -54,34 +51,34 @@ module.exports = function() {
   })
 
   test('should navigate to a path', function(t) {
-    var tw = thataway()
-    tw.addRoute('/c', {})
-    tw.navigate('/c')
+    var router = thataway()
+    router.register('/c', {})
+    router.navigate('/c')
     t.equal(location.pathname, '/c')
     t.end()
   })
 
-  test('should not navigate to same path', function(t) {
-    var  tw = thataway()
-    tw.addListener(
-      function(data) {
-        t.end('called update')
-      }
-    )
-    tw.navigate('/c')
+  test('should have register method', function(t) {
+    t.ok(thataway().register, 'has register method')
     t.end()
   })
 
-  test('should have addRoute method', function(t) {
-    t.ok(thataway().addRoute, 'has addRoute method')
+  test('should register paths at initialization', function(t) {
+    var router = thataway({
+      '/a':{'title':'sup'},
+      '/b':{'title':'nope'},
+      '/c':{'title':'yolo'},
+
+    })
+    t.ok(thataway().register, 'has register method')
     t.end()
   })
 
   test('should get paramaterized route data', function(t) {
-    var tw = thataway()
-    tw.addRoute('/thing/:comment/:id', {stuff:'YOLO'})
+    var router = thataway()
+    router.register('/thing/:comment/:id', {stuff:'YOLO'})
     t.deepEqual(
-      tw.getRouteData('/thing/123/456'),
+      router('/thing/123/456'),
       {
         stuff: 'YOLO',
         path: '/thing/123/456',
@@ -98,11 +95,11 @@ module.exports = function() {
   })
 
   test('should return first route match, then check for pattern match', function(t) {
-    var tw = thataway()
-    tw.addRoute('/thing/:id', {stuff:'NOLO'})
-    tw.addRoute('/thing/', {stuff:'YOLO'})
+    var router = thataway()
+    router.register('/thing/:id', {stuff:'NOLO'})
+    router.register('/thing/', {stuff:'YOLO'})
     t.deepEqual(
-      tw.getRouteData('/thing/'),
+      router('/thing/'),
       {
         stuff: 'YOLO',
         path: '/thing',
@@ -113,30 +110,29 @@ module.exports = function() {
     t.end()
   })
 
-  test.only('should match on root path "/"', function(t) {
+  test('should match on root path "/"', function(t) {
     t.plan(1)
-    var tw = thataway()
-    tw.addRoute('/', {stuff:'ROOT DOWN'})
-    t.deepEqual(tw.getRouteData('/'), { path: '/', query: {} ,stuff:'ROOT DOWN'})
-
+    var router = thataway()
+    router.register('/', {stuff:'ROOT DOWN'})
+    t.deepEqual(router('/'), { path: '/', query: {} ,stuff:'ROOT DOWN'})
   })
 
   test('should work with history.back', function(t){
     t.plan(4)
     var results = ['HOME', 'A', 'B', 'A']
     var counter = 0
-    var tw = thataway()
-    tw.addRoute('/', {title:'HOME'})
-    tw.addRoute('/a', {title:'A'})
-    tw.addRoute('/b', {title:'B'})
-    tw.addListener(function(data) {
+    var router = thataway()
+    router.register('/', {title:'HOME'})
+    router.register('/a', {title:'A'})
+    router.register('/b', {title:'B'})
+    router.subscribe(function(data) {
       var expected = results[counter]
       t.equal(data.title, expected)
       counter++
     })
-    tw.navigate('/')
-    tw.navigate('/a')
-    tw.navigate('/b')
+    router.navigate('/')
+    router.navigate('/a')
+    router.navigate('/b')
     history.back()
   })
 

@@ -1,112 +1,97 @@
+var inWindow = require('in-window')
 var queryString  = require('query-string')
 var routerParams = require('router-params')
-var location
-if (typeof window === 'undefined') {
-  location = {
-    pathname: '/',
-    search: ''
-  }
-}
-else {
-  location = window.location
-}
+var location = inWindow ? window.location : { pathname: '/', search: '' }
 
-module.exports = function thataway() {
+module.exports = function thataway (paths) {
+  paths = paths || {}
+  var routes = {}
   var listeners = []
-  var patterns  = []
-  var routes    = {}
-  if (typeof window !== 'undefined') {
-    window.onpopstate = update
-  }
+  var patterns = []
+  inWindow && (window.onpopstate = back)
+  Object.keys(paths).map(function(p) {register(p, paths[p])})
 
-  function addRoute(route, data) {
-    route = removeTrailingSlash(route)
-    var matcher
-    if (route && typeof route === 'string' &&
-        data && data === Object(data)) {
-      matcher = routerParams(route)
-      if (matcher) {
-        patterns.push({
-          matcher: matcher,
-          data: data
-        })
-      }
-      routes[route] = data
-    }
-    else {
-      throw Error('addRoute requires a route of type string and data of type object to store')
+  function register (path, data) {
+    path = trim(path)
+    if (path) {
+      var matcher = routerParams(path)
+      matcher ?
+      patterns.push({
+        matcher: matcher,
+        data: data
+      }) :
+      routes[path] = data
     }
   }
 
-  function addListener(listener) {
-    if (typeof listener !== 'function') {
-      throw Error('addListener requires a function argument')
-    }
-    return listeners.push(listener)
+  function subscribe (listener) {
+    return 'function' === typeof listener &&
+      listeners.push(listener), unsubscribe
   }
 
-  function shouldUpdate(path) {
-    return path !== removeTrailingSlash(location.pathname)
+  function unsubscribe (l) {
+    l && listeners.splice(listeners.indexOf(l), 1)
   }
 
-  function update() {
-    var data = getRouteData(location.pathname)
-    listeners.forEach(
+  function should (path) {
+    return path !== trim(location.pathname)
+  }
+
+  function back () {
+    var data = router(location.pathname)
+    data.back = true
+    update(data)
+  }
+
+  function update (data) {
+    data = data || router(location.pathname)
+    data && listeners.forEach(
       function(l) {
         l(data)
       }
     )
   }
 
-  function navigate(path, data, title) {
-    if (typeof path !== 'string') {
-      throw Error('navigate requires a path of type string and can optionally be passed data and a title')
-    }
-    path = removeTrailingSlash(path)
-    if (typeof window !== 'undefined' &&
-        shouldUpdate(path)) {
-      history.pushState(data, title, path)
-      update()
-    }
+  function navigate (path, data, title) {
+    path = trim(path)
+    inWindow &&
+    should(path) &&
+    history.pushState(data, title, path),
+    update()
   }
 
-  function removeTrailingSlash(path) {
-    if (!path) { return }
-    var hasTrailingSlash = path.length > 1 && path.slice(-1) === '/'
-    if (hasTrailingSlash) {
-      path = path.substring(0, path.length - 1)
-    }
-    return path
+  function trim (path) {
+    return path === '/' ? path : path.replace(/\/*$/, '')
   }
 
-  function getRouteData(path) {
-    path = removeTrailingSlash(path)
+  function match (path) {
+    var pattern
     var params
-    var data = routes[path]
-    if (!data) {
-      patterns.forEach(function(pattern) {
-        params = pattern.matcher(path)
-        if (params) {
-          data = pattern.data
-          data.params = params
-        }
-      })
-    }
-    if (data) {
-      data.path  = path
-      data.query = queryString.parse(location.search)
-    }
-    else {
-      throw Error('Route not found')
+    var data
+    var i = 0
+    var l = patterns.length
+    for (i; i<l; i++) {
+      pattern = patterns[i]
+      params = pattern.matcher(path)
+      if (params) {
+        data = pattern.data
+        data.params = params
+        break;
+      }
     }
     return data
   }
 
-  return {
-    addRoute:addRoute,
-    addListener:addListener,
-    getRouteData:getRouteData,
-    navigate:navigate
+  function router (path) {
+    path = trim(path)
+    var data = routes[path] || match(path) || {}
+    data.path = path
+    data.query = queryString.parse(location.search)
+    return data
   }
 
+  router.subscribe = subscribe
+  router.register = register
+  router.navigate = navigate
+  return router
 }
