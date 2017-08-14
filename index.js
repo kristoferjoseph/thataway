@@ -61,7 +61,7 @@ module.exports = function thataway (paths) {
   }
 
   function trim (path) {
-    return path === '/' ? path : path.replace(/\/*$/, '')
+    return path === '/' ? path : path && path.replace(/\/*$/, '')
   }
 
   function match (path) {
