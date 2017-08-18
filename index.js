@@ -34,7 +34,7 @@ module.exports = function thataway (paths) {
   }
 
   function should (path) {
-    return path !== trim(location.pathname)
+    return path && path !== trim(location.pathname)
   }
 
   function back () {
