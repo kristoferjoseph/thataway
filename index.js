@@ -85,8 +85,9 @@ module.exports = function thataway (paths) {
   function router (path) {
     path = trim(path)
     var data = routes[path] || match(path) || {}
-    data.path = path
     data.query = queryString.parse(location.search)
+    data.hash = queryString.parse(location.hash)
+    data.path = path
     return data
   }
 

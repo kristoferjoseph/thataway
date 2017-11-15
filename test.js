@@ -87,7 +87,8 @@ module.exports = function() {
           comment: '123',
           id: '456'
         },
-        query: {}
+        query: {},
+        hash: {}
       },
       'got correct route data'
     )
@@ -103,7 +104,8 @@ module.exports = function() {
       {
         stuff: 'YOLO',
         path: '/thing',
-        query: {}
+        query: {},
+        hash: {}
       },
       'got correct route data'
     )
@@ -114,7 +116,7 @@ module.exports = function() {
     t.plan(1)
     var router = thataway()
     router.register('/', {stuff:'ROOT DOWN'})
-    t.deepEqual(router('/'), { path: '/', query: {} ,stuff:'ROOT DOWN'})
+    t.deepEqual(router('/'), { path: '/', query: {} ,stuff:'ROOT DOWN', hash: {}})
   })
 
   test('should work with history.back', function(t){
@@ -135,5 +137,34 @@ module.exports = function() {
     router.navigate('/b')
     history.back()
   })
+
+  test('should get query string and hash data', function(t) {
+    var router = thataway()
+    router.register('/thing/:id', {stuff:'YOLO'})
+    router.subscribe(function (data) {
+      t.deepEqual(
+        data,
+        {
+          stuff: 'YOLO',
+          path: '/thing/123',
+          params: {
+            path: '/thing/123',
+            id: '123'
+          },
+          query: {
+            maybe: 'sure'
+          },
+          hash: {
+            create: 'thing'
+          }
+        },
+        'got correct route data'
+      )
+      t.end()
+    })
+    // WARN: you must specify query string *BEFORE* hash
+    router.navigate('/thing/123?maybe=sure#create=thing')
+  })
+
 
 }()

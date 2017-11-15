@@ -86,8 +86,9 @@ module.exports = function thataway (paths) {
   function router (path) {
     path = trim(path)
     var data = routes[path] || match(path) || {}
-    data.path = path
     data.query = queryString.parse(location.search)
+    data.hash = queryString.parse(location.hash)
+    data.path = path
     return data
   }
 
@@ -2334,12 +2335,14 @@ var mod = require('./helpers/mod');
 var IsCallable = require('is-callable');
 var toPrimitive = require('es-to-primitive/es5');
 
+var has = require('has');
+
 // https://es5.github.io/#x9
 var ES5 = {
 	ToPrimitive: toPrimitive,
 
 	ToBoolean: function ToBoolean(value) {
-		return Boolean(value);
+		return !!value;
 	},
 	ToNumber: function ToNumber(value) {
 		return Number(value);
@@ -2405,12 +2408,160 @@ var ES5 = {
 		if (typeof x === 'string') {
 			return 'String';
 		}
+	},
+
+	// http://ecma-international.org/ecma-262/6.0/#sec-property-descriptor-specification-type
+	IsPropertyDescriptor: function IsPropertyDescriptor(Desc) {
+		if (this.Type(Desc) !== 'Object') {
+			return false;
+		}
+		var allowed = {
+			'[[Configurable]]': true,
+			'[[Enumerable]]': true,
+			'[[Get]]': true,
+			'[[Set]]': true,
+			'[[Value]]': true,
+			'[[Writable]]': true
+		};
+		// jscs:disable
+		for (var key in Desc) { // eslint-disable-line
+			if (has(Desc, key) && !allowed[key]) {
+				return false;
+			}
+		}
+		// jscs:enable
+		var isData = has(Desc, '[[Value]]');
+		var IsAccessor = has(Desc, '[[Get]]') || has(Desc, '[[Set]]');
+		if (isData && IsAccessor) {
+			throw new TypeError('Property Descriptors may not be both accessor and data descriptors');
+		}
+		return true;
+	},
+
+	// http://ecma-international.org/ecma-262/5.1/#sec-8.10.1
+	IsAccessorDescriptor: function IsAccessorDescriptor(Desc) {
+		if (typeof Desc === 'undefined') {
+			return false;
+		}
+
+		if (!this.IsPropertyDescriptor(Desc)) {
+			throw new TypeError('Desc must be a Property Descriptor');
+		}
+
+		if (!has(Desc, '[[Get]]') && !has(Desc, '[[Set]]')) {
+			return false;
+		}
+
+		return true;
+	},
+
+	// http://ecma-international.org/ecma-262/5.1/#sec-8.10.2
+	IsDataDescriptor: function IsDataDescriptor(Desc) {
+		if (typeof Desc === 'undefined') {
+			return false;
+		}
+
+		if (!this.IsPropertyDescriptor(Desc)) {
+			throw new TypeError('Desc must be a Property Descriptor');
+		}
+
+		if (!has(Desc, '[[Value]]') && !has(Desc, '[[Writable]]')) {
+			return false;
+		}
+
+		return true;
+	},
+
+	// http://ecma-international.org/ecma-262/5.1/#sec-8.10.3
+	IsGenericDescriptor: function IsGenericDescriptor(Desc) {
+		if (typeof Desc === 'undefined') {
+			return false;
+		}
+
+		if (!this.IsPropertyDescriptor(Desc)) {
+			throw new TypeError('Desc must be a Property Descriptor');
+		}
+
+		if (!this.IsAccessorDescriptor(Desc) && !this.IsDataDescriptor(Desc)) {
+			return true;
+		}
+
+		return false;
+	},
+
+	// http://ecma-international.org/ecma-262/5.1/#sec-8.10.4
+	FromPropertyDescriptor: function FromPropertyDescriptor(Desc) {
+		if (typeof Desc === 'undefined') {
+			return Desc;
+		}
+
+		if (!this.IsPropertyDescriptor(Desc)) {
+			throw new TypeError('Desc must be a Property Descriptor');
+		}
+
+		if (this.IsDataDescriptor(Desc)) {
+			return {
+				value: Desc['[[Value]]'],
+				writable: !!Desc['[[Writable]]'],
+				enumerable: !!Desc['[[Enumerable]]'],
+				configurable: !!Desc['[[Configurable]]']
+			};
+		} else if (this.IsAccessorDescriptor(Desc)) {
+			return {
+				get: Desc['[[Get]]'],
+				set: Desc['[[Set]]'],
+				enumerable: !!Desc['[[Enumerable]]'],
+				configurable: !!Desc['[[Configurable]]']
+			};
+		} else {
+			throw new TypeError('FromPropertyDescriptor must be called with a fully populated Property Descriptor');
+		}
+	},
+
+	// http://ecma-international.org/ecma-262/5.1/#sec-8.10.5
+	ToPropertyDescriptor: function ToPropertyDescriptor(Obj) {
+		if (this.Type(Obj) !== 'Object') {
+			throw new TypeError('ToPropertyDescriptor requires an object');
+		}
+
+		var desc = {};
+		if (has(Obj, 'enumerable')) {
+			desc['[[Enumerable]]'] = this.ToBoolean(Obj.enumerable);
+		}
+		if (has(Obj, 'configurable')) {
+			desc['[[Configurable]]'] = this.ToBoolean(Obj.configurable);
+		}
+		if (has(Obj, 'value')) {
+			desc['[[Value]]'] = Obj.value;
+		}
+		if (has(Obj, 'writable')) {
+			desc['[[Writable]]'] = this.ToBoolean(Obj.writable);
+		}
+		if (has(Obj, 'get')) {
+			var getter = Obj.get;
+			if (typeof getter !== 'undefined' && !this.IsCallable(getter)) {
+				throw new TypeError('getter must be a function');
+			}
+			desc['[[Get]]'] = getter;
+		}
+		if (has(Obj, 'set')) {
+			var setter = Obj.set;
+			if (typeof setter !== 'undefined' && !this.IsCallable(setter)) {
+				throw new TypeError('setter must be a function');
+			}
+			desc['[[Set]]'] = setter;
+		}
+
+		if ((has(desc, '[[Get]]') || has(desc, '[[Set]]')) && (has(desc, '[[Value]]') || has(desc, '[[Writable]]'))) {
+			throw new TypeError('Invalid property descriptor. Cannot both specify accessors and a value or writable attribute');
+		}
+		return desc;
 	}
 };
 
 module.exports = ES5;
 
-},{"./helpers/isFinite":14,"./helpers/isNaN":15,"./helpers/mod":16,"./helpers/sign":17,"es-to-primitive/es5":18,"is-callable":30}],14:[function(require,module,exports){
+},{"./helpers/isFinite":14,"./helpers/isNaN":15,"./helpers/mod":16,"./helpers/sign":17,"es-to-primitive/es5":18,"has":25,"is-callable":30}],14:[function(require,module,exports){
 var $isNaN = Number.isNaN || function (a) { return a !== a; };
 
 module.exports = Number.isFinite || function (x) { return typeof x === 'number' && !$isNaN(x) && x !== Infinity && x !== -Infinity; };
@@ -2852,6 +3003,10 @@ module.exports = function forEach (obj, fn, ctx) {
 
 
 },{}],23:[function(require,module,exports){
+'use strict';
+
+/* eslint no-invalid-this: 1 */
+
 var ERROR_MESSAGE = 'Function.prototype.bind called on incompatible ';
 var slice = Array.prototype.slice;
 var toStr = Object.prototype.toString;
@@ -2902,6 +3057,8 @@ module.exports = function bind(that) {
 };
 
 },{}],24:[function(require,module,exports){
+'use strict';
+
 var implementation = require('./implementation');
 
 module.exports = Function.prototype.bind || implementation;
@@ -3031,7 +3188,7 @@ if (typeof Object.create === 'function') {
 /*!
  * Determine if an object is a Buffer
  *
- * @author   Feross Aboukhadijeh <feross@feross.org> <http://feross.org>
+ * @author   Feross Aboukhadijeh <https://feross.org>
  * @license  MIT
  */
 
@@ -3249,7 +3406,7 @@ module.exports = function inspect_ (obj, opts, depth, seen) {
     else if (indexOf(seen, obj) >= 0) {
         return '[Circular]';
     }
-    
+
     function inspect (value, from) {
         if (from) {
             seen = seen.slice();
@@ -3279,24 +3436,10 @@ module.exports = function inspect_ (obj, opts, depth, seen) {
     }
     if (isArray(obj)) {
         if (obj.length === 0) return '[]';
-        var xs = Array(obj.length);
-        for (var i = 0; i < obj.length; i++) {
-            xs[i] = has(obj, i) ? inspect(obj[i], obj) : '';
-        }
-        return '[ ' + xs.join(', ') + ' ]';
+        return '[ ' + arrObjKeys(obj, inspect).join(', ') + ' ]';
     }
     if (isError(obj)) {
-        var parts = [];
-        for (var key in obj) {
-            if (!has(obj, key)) continue;
-            
-            if (/[^\w$]/.test(key)) {
-                parts.push(inspect(key) + ': ' + inspect(obj[key]));
-            }
-            else {
-                parts.push(key + ': ' + inspect(obj[key]));
-            }
-        }
+        var parts = arrObjKeys(obj, inspect);
         if (parts.length === 0) return '[' + String(obj) + ']';
         return '{ [' + String(obj) + '] ' + parts.join(', ') + ' }';
     }
@@ -3327,29 +3470,12 @@ module.exports = function inspect_ (obj, opts, depth, seen) {
         return markBoxed(inspect(String(obj)));
     }
     if (!isDate(obj) && !isRegExp(obj)) {
-        var xs = [];
-        var keys = objectKeys(obj);
-        keys.sort();
-        for (var i = 0; i < keys.length; i++) {
-            var key = keys[i];
-            if (/[^\w$]/.test(key)) {
-                xs.push(inspect(key) + ': ' + inspect(obj[key], obj));
-            }
-            else xs.push(key + ': ' + inspect(obj[key], obj));
-        }
+        var xs = arrObjKeys(obj, inspect);
         if (xs.length === 0) return '{}';
         return '{ ' + xs.join(', ') + ' }';
     }
     return String(obj);
 };
-
-function objectKeys(obj) {
-    var keys = [];
-    for (var key in obj) {
-        if (has(obj, key)) keys.push(key);
-    }
-    return keys;
-}
 
 function quote (s) {
     return String(s).replace(/"/g, '&quot;');
@@ -3393,7 +3519,12 @@ function isMap (x) {
     }
     try {
         mapSize.call(x);
-        return true;
+        try {
+            setSize.call(x);
+        } catch (s) {
+            return true;
+        }
+        return x instanceof Map; // core-js workaround, pre-v2.5.0
     } catch (e) {}
     return false;
 }
@@ -3404,7 +3535,12 @@ function isSet (x) {
     }
     try {
         setSize.call(x);
-        return true;
+        try {
+            mapSize.call(x);
+        } catch (m) {
+            return true;
+        }
+        return x instanceof Set; // core-js workaround, pre-v2.5.0
     } catch (e) {}
     return false;
 }
@@ -3435,8 +3571,29 @@ function markBoxed (str) {
     return 'Object(' + str + ')';
 }
 
-function collectionOf(type, size, entries) {
+function collectionOf (type, size, entries) {
     return type + ' (' + size + ') {' + entries.join(', ') + '}';
+}
+
+function arrObjKeys (obj, inspect) {
+    var isArr = isArray(obj);
+    var xs = [];
+    if (isArr) {
+        xs.length = obj.length;
+        for (var i = 0; i < obj.length; i++) {
+            xs[i] = has(obj, i) ? inspect(obj[i], obj) : '';
+        }
+    }
+    for (var key in obj) {
+        if (!has(obj, key)) continue;
+        if (isArr && String(Number(key)) === key && key < obj.length) continue;
+        if (/[^\w$]/.test(key)) {
+            xs.push(inspect(key, obj) + ': ' + inspect(obj[key], obj));
+        } else {
+            xs.push(key + ': ' + inspect(obj[key], obj));
+        }
+    }
+    return xs;
 }
 
 },{}],35:[function(require,module,exports){
@@ -8709,7 +8866,8 @@ module.exports = function() {
           comment: '123',
           id: '456'
         },
-        query: {}
+        query: {},
+        hash: {}
       },
       'got correct route data'
     )
@@ -8725,7 +8883,8 @@ module.exports = function() {
       {
         stuff: 'YOLO',
         path: '/thing',
-        query: {}
+        query: {},
+        hash: {}
       },
       'got correct route data'
     )
@@ -8736,7 +8895,7 @@ module.exports = function() {
     t.plan(1)
     var router = thataway()
     router.register('/', {stuff:'ROOT DOWN'})
-    t.deepEqual(router('/'), { path: '/', query: {} ,stuff:'ROOT DOWN'})
+    t.deepEqual(router('/'), { path: '/', query: {} ,stuff:'ROOT DOWN', hash: {}})
   })
 
   test('should work with history.back', function(t){
@@ -8757,6 +8916,35 @@ module.exports = function() {
     router.navigate('/b')
     history.back()
   })
+
+  test('should get query string and hash data', function(t) {
+    var router = thataway()
+    router.register('/thing/:id', {stuff:'YOLO'})
+    router.subscribe(function (data) {
+      t.deepEqual(
+        data,
+        {
+          stuff: 'YOLO',
+          path: '/thing/123',
+          params: {
+            path: '/thing/123',
+            id: '123'
+          },
+          query: {
+            maybe: 'sure'
+          },
+          hash: {
+            create: 'thing'
+          }
+        },
+        'got correct route data'
+      )
+      t.end()
+    })
+    // WARN: you must specify query string *BEFORE* hash
+    router.navigate('/thing/123?maybe=sure#create=thing')
+  })
+
 
 }()
 
