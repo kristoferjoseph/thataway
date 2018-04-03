@@ -8,9 +8,7 @@
     "open": "open http://localhost:6661",
     "test-build": "browserify ./test.js -o ./public/test.bundle.js",
     "watch-test": "watchify ./test.js -o ./public/test.bundle.js",
-    "start": "node server.js",
-    "min": "browserify ./index.js | uglifyjs --compress --mangle --screw-ie8 > thataway.min.js",
-    "umd": "browserify ./index.js --standalone thataway | uglifyjs --compress --mangle --screw-ie8 > thataway.umd.js"
+    "start": "node server.js"
   },
   "keywords": [
     "router",
@@ -33,7 +31,6 @@
     "ejs": "^2.5.1",
     "express": "^4.14.0",
     "browserify": "^13.1.0",
-    "uglify-js": "^2.7.0",
     "tape": "^4.6.0",
     "watchify": "^3.7.0"
   }
