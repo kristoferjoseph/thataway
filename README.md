@@ -1,11 +1,12 @@
-# 👉Thataway👈
+# 👉☝️  Thataway 👇👈
 Minimal url routing library.
 
 - Written in plain ol JavaScript so **no transpile needed**🔥
 - ~8k minified💥
-- Simple api of three methods:
+- Simple api:
     - register
-    - subscribe/unsubscribe
+    - subscribe
+    - unsubscribe
     - navigate
 
 ## Install
@@ -25,6 +26,7 @@ function update(data) {
 }
 
 router.navigate('/things')
+router.unsubscribe(update)
 ```
 
 Complex urls
@@ -36,11 +38,12 @@ router.register('/things/:comment/:id', {animal:'raccoon'})
 router.subscribe(update)
 
 function update(data) {
-  console.log(data)// Outputs {animal:'racoon',path:'/things', params: {comment:'123',id:'456'}, query:{}}
+  console.log(data)// Outputs {animal:'racoon',path:'/things', params: { comment:'123', id:'456' }, query: { can: do }, hash: { stuff: too }}
 }
 
-router.navigate('/things/123/456')
+router.navigate('/things/123/456?can=do#stuff=too')
+router.unsubscribe(update)
 ```
 
 ## Test
-`npm t`
+`npm it`

@@ -1,37 +1,47 @@
 (function e(t,n,r){function s(o,u){if(!n[o]){if(!t[o]){var a=typeof require=="function"&&require;if(!u&&a)return a(o,!0);if(i)return i(o,!0);var f=new Error("Cannot find module '"+o+"'");throw f.code="MODULE_NOT_FOUND",f}var l=n[o]={exports:{}};t[o][0].call(l.exports,function(e){var n=t[o][1][e];return s(n?n:e)},l,l.exports,e,t,n,r)}return n[o].exports}var i=typeof require=="function"&&require;for(var o=0;o<r.length;o++)s(r[o]);return s})({1:[function(require,module,exports){
 var inWindow = require('in-window')
-var queryString  = require('query-string')
+var queryString = require('query-string')
 var routerParams = require('router-params')
-var location = inWindow ? window.location : { pathname: '/', search: '' }
+var location = inWindow
+  ? window.location
+  : { pathname: '/', search: '' }
 
 module.exports = function thataway (paths) {
   paths = paths || {}
   var routes = {}
   var listeners = []
   var patterns = []
-  inWindow && (window.onpopstate = back)
-  Object.keys(paths).map(function(p) {register(p, paths[p])})
+  if (inWindow) {
+    window.onpopstate = back
+  }
 
   function register (path, data) {
     path = trim(path)
     if (path) {
       var matcher = routerParams(path)
-      matcher ?
-      patterns.push({
-        matcher: matcher,
-        data: data
-      }) :
-      routes[path] = data
+      matcher
+        ? patterns.push({
+          matcher: matcher,
+          data: data
+        })
+        : routes[path] = data
     }
+    return Object.keys(routes).length
   }
 
   function subscribe (listener) {
-    return 'function' === typeof listener &&
-      listeners.push(listener), unsubscribe
+    if (typeof listener === 'function') {
+      listeners.push(listener)
+    }
+    return listeners.length
   }
 
   function unsubscribe (l) {
-    l && listeners.splice(listeners.indexOf(l), 1)
+    var i = listeners.indexOf(l)
+    if (l && i !== -1) {
+      listeners.splice(i, 1)
+      return true
+    }
   }
 
   function should (path) {
@@ -47,7 +57,7 @@ module.exports = function thataway (paths) {
   function update (data) {
     data = data || router(location.pathname)
     data && listeners.forEach(
-      function(l) {
+      function (l) {
         l(data)
       }
     )
@@ -55,14 +65,16 @@ module.exports = function thataway (paths) {
 
   function navigate (path, data, title) {
     path = trim(path)
-    inWindow &&
-    should(path) &&
-    history.pushState(data, title, path),
-    update()
+    if (inWindow && should(path)) {
+      window.history.pushState(data, title, path)
+      update()
+    }
   }
 
   function trim (path) {
-    return path === '/' ? path : path && path.replace(/\/*$/, '')
+    return path === '/'
+      ? path
+      : path && path.replace(/\/*$/, '')
   }
 
   function match (path) {
@@ -71,7 +83,7 @@ module.exports = function thataway (paths) {
     var data
     var i = 0
     var l = patterns.length
-    for (i; i<l; i++) {
+    for (i; i < l; i++) {
       pattern = patterns[i]
       params = pattern.matcher(path)
       if (params) {
@@ -93,6 +105,7 @@ module.exports = function thataway (paths) {
   }
 
   router.subscribe = subscribe
+  router.unsubscribe = unsubscribe
   router.register = register
   router.navigate = navigate
   return router
@@ -8777,85 +8790,107 @@ function config (name) {
 
 }).call(this,typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
 },{}],72:[function(require,module,exports){
-var test   = require('tape')
+var inWindow = require('in-window')
+var test = require('tape')
 var thataway = require('./')
 var display
 
-'undefined' !== typeof window &&
-(display = document.getElementById('output'))
-
-function print(out) {
-  display && (display.innerHTML += out)
+if (inWindow) {
+  display = document.getElementById('output')
 }
 
-module.exports = function() {
+function print (out) {
+  display && (display.innerHTML += `<h4><span class='test-pass'>✔︎</span> ${out}</h4>`)
+}
 
-  test('thataway', function(t){
+module.exports = (function () {
+  test('thataway', function (t) {
     t.ok(thataway, 'thataway exists')
     t.end()
   })
 
-  test('should subscribe', function(t) {
-    t.ok(thataway().subscribe(function() {}), 'thataway did add listener')
+  test('should subscribe', function (t) {
+    t.ok(thataway().subscribe(function () {}), 'thataway did add listener', print('thataway did add listener'))
     t.end()
   })
 
-  test('should call listener on url change', function(t) {
+  test('should unsubscribe', function (t) {
+    var router = thataway()
+    router.subscribe(hear)
+    function hear () {
+      t.fail('listener should be unsubscribed')
+    }
+    t.ok(
+      router.unsubscribe(hear),
+      'unsubscribed a listener',
+      print('unsubscribed a listener')
+    )
+    router.navigate('/')
+    t.end()
+  })
+
+  test('should call listener on url change', function (t) {
     var router = thataway()
     router.register('/a', {})
     router.subscribe(
-      function(e) {
-        t.ok(true, 'called listener')
+      function (e) {
+        t.ok(true, 'called listener', print('called listener'))
         t.end()
       }
     )
     router.navigate('/a')
   })
 
-  test('should pass path to update method', function(t) {
+  test('should pass path to update method', function (t) {
     var router = thataway()
     router.register('/b', {})
     router.subscribe(
-      function(data) {
-        t.equal(data.path, '/b', 'passed path to update')
+      function (data) {
+        t.equal(data.path, '/b', 'passed path to update', print('passed path to update'))
         t.end()
       }
     )
     router.navigate('/b')
   })
 
-  test('should have navigate method', function(t) {
-    t.ok(thataway().navigate, 'navigate method does not exist')
+  test('should have navigate method', function (t) {
+    t.ok(thataway().navigate, 'navigate method exists', print('navigate method exists'))
     t.end()
   })
 
-  test('should navigate to a path', function(t) {
+  test('should navigate to a path', function (t) {
     var router = thataway()
     router.register('/c', {})
     router.navigate('/c')
-    t.equal(location.pathname, '/c')
+    t.equal(
+      window.location.pathname,
+      '/c',
+      print('navigated to correct location')
+    )
     t.end()
   })
 
-  test('should have register method', function(t) {
-    t.ok(thataway().register, 'has register method')
+  test('should have register method', function (t) {
+    t.ok(thataway().register, 'has register method', print('has register'))
     t.end()
   })
 
-  test('should register paths at initialization', function(t) {
-    var router = thataway({
-      '/a':{'title':'sup'},
-      '/b':{'title':'nope'},
-      '/c':{'title':'yolo'},
-
-    })
-    t.ok(thataway().register, 'has register method')
-    t.end()
-  })
-
-  test('should get paramaterized route data', function(t) {
+  test('should register paths', function (t) {
     var router = thataway()
-    router.register('/thing/:comment/:id', {stuff:'YOLO'})
+    router.register('/a', {'title': 'sup'})
+    router.register('/b', {'title': 'nope'})
+    t.equal(
+      router.register('/c', {'title': 'yolo'}),
+      3,
+      'registered all paths',
+      print('registered all paths')
+    )
+    t.end()
+  })
+
+  test('should get paramaterized route data', function (t) {
+    var router = thataway()
+    router.register('/thing/:comment/:id', {stuff: 'YOLO'})
     t.deepEqual(
       router('/thing/123/456'),
       {
@@ -8869,15 +8904,16 @@ module.exports = function() {
         query: {},
         hash: {}
       },
-      'got correct route data'
+      'got correct route data',
+      print('got correct route data')
     )
     t.end()
   })
 
-  test('should return first route match, then check for pattern match', function(t) {
+  test('should return first route match, then check for pattern match', function (t) {
     var router = thataway()
-    router.register('/thing/:id', {stuff:'NOLO'})
-    router.register('/thing/', {stuff:'YOLO'})
+    router.register('/thing/:id', {stuff: 'NOLO'})
+    router.register('/thing/', {stuff: 'YOLO'})
     t.deepEqual(
       router('/thing/'),
       {
@@ -8886,40 +8922,51 @@ module.exports = function() {
         query: {},
         hash: {}
       },
-      'got correct route data'
+      'route matched path before parameterized path',
+      print('route matched path before parameterized path')
     )
     t.end()
   })
 
-  test('should match on root path "/"', function(t) {
+  test('should match on root path "/"', function (t) {
     t.plan(1)
     var router = thataway()
-    router.register('/', {stuff:'ROOT DOWN'})
-    t.deepEqual(router('/'), { path: '/', query: {} ,stuff:'ROOT DOWN', hash: {}})
+    router.register('/', {stuff: 'ROOT DOWN'})
+    t.deepEqual(
+      router('/'),
+      {path: '/', query: {}, stuff: 'ROOT DOWN', hash: {}},
+      'matched root path',
+      print('matched root path')
+    )
   })
 
-  test('should work with history.back', function(t){
+  test('should work with history.back', function (t) {
     t.plan(4)
     var results = ['HOME', 'A', 'B', 'A']
     var counter = 0
     var router = thataway()
-    router.register('/', {title:'HOME'})
-    router.register('/a', {title:'A'})
-    router.register('/b', {title:'B'})
-    router.subscribe(function(data) {
+    router.register('/', {title: 'HOME'})
+    router.register('/a', {title: 'A'})
+    router.register('/b', {title: 'B'})
+    router.subscribe(function (data) {
       var expected = results[counter]
-      t.equal(data.title, expected)
+      t.equal(
+        data.title,
+        expected,
+        `matched path ${data.title}`,
+        print(`matched path ${data.title}`)
+      )
       counter++
     })
     router.navigate('/')
     router.navigate('/a')
     router.navigate('/b')
-    history.back()
+    window.history.back()
   })
 
-  test('should get query string and hash data', function(t) {
+  test('should get query string and hash data', function (t) {
     var router = thataway()
-    router.register('/thing/:id', {stuff:'YOLO'})
+    router.register('/thing/:id', {stuff: 'YOLO'})
     router.subscribe(function (data) {
       t.deepEqual(
         data,
@@ -8937,7 +8984,8 @@ module.exports = function() {
             create: 'thing'
           }
         },
-        'got correct route data'
+        'got correct query and hash data',
+        print('got correct query and hash data')
       )
       t.end()
     })
@@ -8945,7 +8993,15 @@ module.exports = function() {
     router.navigate('/thing/123?maybe=sure#create=thing')
   })
 
+  test('should reset url to root', function (t) {
+    thataway().navigate('/')
+    t.equal(
+      window.location.pathname,
+      '/',
+      'reset url', print('reset url')
+    )
+    t.end()
+  })
+}())
 
-}()
-
-},{"./":1,"tape":66}]},{},[72]);
+},{"./":1,"in-window":27,"tape":66}]},{},[72]);

@@ -1,36 +1,46 @@
 var inWindow = require('in-window')
-var queryString  = require('query-string')
+var queryString = require('query-string')
 var routerParams = require('router-params')
-var location = inWindow ? window.location : { pathname: '/', search: '' }
+var location = inWindow
+  ? window.location
+  : { pathname: '/', search: '' }
 
 module.exports = function thataway (paths) {
   paths = paths || {}
   var routes = {}
   var listeners = []
   var patterns = []
-  inWindow && (window.onpopstate = back)
-  Object.keys(paths).map(function(p) {register(p, paths[p])})
+  if (inWindow) {
+    window.onpopstate = back
+  }
 
   function register (path, data) {
     path = trim(path)
     if (path) {
       var matcher = routerParams(path)
-      matcher ?
-      patterns.push({
-        matcher: matcher,
-        data: data
-      }) :
-      routes[path] = data
+      matcher
+        ? patterns.push({
+          matcher: matcher,
+          data: data
+        })
+        : routes[path] = data
     }
+    return Object.keys(routes).length
   }
 
   function subscribe (listener) {
-    return 'function' === typeof listener &&
-      listeners.push(listener), unsubscribe
+    if (typeof listener === 'function') {
+      listeners.push(listener)
+    }
+    return listeners.length
   }
 
   function unsubscribe (l) {
-    l && listeners.splice(listeners.indexOf(l), 1)
+    var i = listeners.indexOf(l)
+    if (l && i !== -1) {
+      listeners.splice(i, 1)
+      return true
+    }
   }
 
   function should (path) {
@@ -46,7 +56,7 @@ module.exports = function thataway (paths) {
   function update (data) {
     data = data || router(location.pathname)
     data && listeners.forEach(
-      function(l) {
+      function (l) {
         l(data)
       }
     )
@@ -54,14 +64,16 @@ module.exports = function thataway (paths) {
 
   function navigate (path, data, title) {
     path = trim(path)
-    inWindow &&
-    should(path) &&
-    history.pushState(data, title, path),
-    update()
+    if (inWindow && should(path)) {
+      window.history.pushState(data, title, path)
+      update()
+    }
   }
 
   function trim (path) {
-    return path === '/' ? path : path && path.replace(/\/*$/, '')
+    return path === '/'
+      ? path
+      : path && path.replace(/\/*$/, '')
   }
 
   function match (path) {
@@ -70,7 +82,7 @@ module.exports = function thataway (paths) {
     var data
     var i = 0
     var l = patterns.length
-    for (i; i<l; i++) {
+    for (i; i < l; i++) {
       pattern = patterns[i]
       params = pattern.matcher(path)
       if (params) {
@@ -92,6 +104,7 @@ module.exports = function thataway (paths) {
   }
 
   router.subscribe = subscribe
+  router.unsubscribe = unsubscribe
   router.register = register
   router.navigate = navigate
   return router
